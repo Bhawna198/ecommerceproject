@@ -1,27 +1,43 @@
+require("dotenv").config();
 const express = require("express");
-const dotenv = require("dotenv");
 const cors = require("cors");
-const sequelize = require("./config/db");
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use(express.static("public"));
+const sequelize = require("./config/db"); // Import Sequelize instance
 
 // Import Routes
-const countryRoutes = require("./routes/countryRoutes");
+const auth = require("./routes/auth");
+const userRoutes = require("./routes/userRoutes");
+const productRoutes = require("./routes/productRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
-// Use Routes
-app.use("/api/countries", countryRoutes);
+// Initialize Express
+const app = express();
 
-// Sync Database
-sequelize.sync({ force: false }).then(() => {
-  console.log("✅ Database & tables synced!");
-});
+// Middleware
+app.use(express.json());
+app.use(cors());
 
-// Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Routes
+app.use("/api/auth" , auth);
+app.use("/api/users", userRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/payments", paymentRoutes);
+
+// Sync Models and Start Server
+sequelize.sync({ force: false }) // Set to true to drop and recreate tables on restart
+    .then(() => {
+        console.log("✅ Database & tables created!");
+
+        const PORT = process.env.PORT || 4000;
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("❌ Database Sync Error:", err);
+    });
